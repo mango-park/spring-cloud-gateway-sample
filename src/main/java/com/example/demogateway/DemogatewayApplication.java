@@ -2,6 +2,7 @@ package com.example.demogateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -13,10 +14,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @SpringBootApplication
+@EnableDiscoveryClient
 public class DemogatewayApplication {
+
+	@Value("${hello.url.server}")
+	private String HELLOSERVER_URL;
+
+	@Value("${hello.url.client}")
+	private String HELLOCLIENT_URL;
 
 	@RequestMapping("/circuitbreakerfallback")
 	public String circuitbreakerfallback() {
@@ -31,6 +40,10 @@ public class DemogatewayApplication {
 						.uri("http://httpbin.org"))
 				.route("host_route", r -> r.host("*.myhost.org")
 						.uri("http://httpbin.org"))
+				.route("host_helloclient_route", r -> r.host("*.helloclient.com")
+						.uri("http://"+HELLOCLIENT_URL))
+				.route("host_helloserver_route", r -> r.host("*.helloserver.com")
+						.uri("http://"+HELLOSERVER_URL))
 				.route("rewrite_route", r -> r.host("*.rewrite.org")
 						.filters(f -> f.rewritePath("/foo/(?<segment>.*)",
 								"/${segment}"))
